@@ -48,3 +48,48 @@ download(REVIEWS_URL, REVIEWS_PATH)
 download(META_URL, META_PATH)
 
 print("\n✅ Both files ready!")
+
+# ─────────────────────────────────────────────
+# STEP 3: LOAD A SAMPLE OF THE REVIEWS DATA
+# ─────────────────────────────────────────────
+
+# We only load the first 50,000 rows to keep things fast
+# The file is compressed (.gz) so we use gzip to open it
+
+print("Loading reviews sample...")
+
+reviews = []  # empty list — we'll fill it row by row
+
+with gzip.open(REVIEWS_PATH, "rb") as f:
+    for i, line in enumerate(f):
+        if i >= 50000:          # stop after 50,000 rows
+            break
+        reviews.append(json.loads(line))   # each line is one review in JSON format
+
+# Convert the list into a pandas DataFrame (like an Excel table in Python)
+reviews_df = pd.DataFrame(reviews)
+
+print(f"✅ Loaded {len(reviews_df)} reviews")
+print("\nFirst 5 rows:")
+print(reviews_df.head())
+
+# ─────────────────────────────────────────────
+# STEP 4: UNDERSTAND WHAT WE'RE WORKING WITH
+# ─────────────────────────────────────────────
+
+# This shows ALL column names
+print("Column names:")
+print(reviews_df.columns.tolist())
+
+# This shows the shape — how many rows and columns
+print(f"\nShape: {reviews_df.shape[0]} rows, {reviews_df.shape[1]} columns")
+
+# This shows each column and what TYPE of data it holds
+# object = text, float64 = decimal number, int64 = whole number
+print("\nColumn types:")
+print(reviews_df.dtypes)
+
+# This shows how many values are MISSING in each column
+# Missing data is a very common problem in real datasets
+print("\nMissing values per column:")
+print(reviews_df.isnull().sum())
