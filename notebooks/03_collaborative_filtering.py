@@ -106,7 +106,55 @@ print(f"\n── Model Accuracy ────────────────
 print(f"   RMSE : {rmse:.4f}")
 
 # ── Step 6: Generate recommendations for a real user ──────────
+# part 1
 
+# First let's pick a real user from our dataset
+# We'll find a user who has rated many books so recommendations are meaningful
+user_ratings_count = ratings_df.groupby('user_id')['rating'].count()
+active_user = user_ratings_count.idxmax()  # user with most ratings
+
+print(f"\n── Generating Recommendations ───────────────")
+print(f"   Selected user    : {active_user}")
+print(f"   Their rating count: {user_ratings_count[active_user]}")
+
+# Find all books this user has NOT rated yet
+all_books       = ratings_df['product_id'].unique()
+rated_books     = ratings_df[ratings_df['user_id'] == active_user]['product_id'].values
+unrated_books   = [b for b in all_books if b not in rated_books]
+
+print(f"   Books rated      : {len(rated_books)}")
+print(f"   Books not rated  : {len(unrated_books)}")
+
+# Predict ratings for every unrated book
+print(f"\n   Predicting ratings for {len(unrated_books)} unrated books...")
+predictions_list = []
+
+for book_id in unrated_books:
+    predicted = model.predict(active_user, book_id)
+    predictions_list.append((book_id, predicted.est))
+
+# Sort by predicted rating — highest first
+predictions_list.sort(key=lambda x: x[1], reverse=True)
+
+# Take top 10
+top_10 = predictions_list[:10]
+
+# Load train_data to get book titles
+train_df = pd.read_csv("data/processed/train_data.csv")
+book_titles = train_df[['product_id', 'title']].drop_duplicates()
+
+print(f"\n── Top 10 Recommended Books ─────────────────")
+print(f"{'Title':<45} {'Predicted Rating':>16}")
+print("-" * 63)
+
+for book_id, predicted_rating in top_10:
+    title_row = book_titles[book_titles['product_id'] == book_id]
+    title = title_row['title'].values[0] if len(title_row) > 0 else "Unknown"
+    # Trim long titles
+    title = title[:43] + ".." if len(title) > 43 else title
+    print(f"{title:<45} {predicted_rating:>16.2f}")
+
+# part 2
 
 # Find a realistic user — someone who rated between 20 and 50 books
 # This is more realistic than the super reviewer with 2091 ratings
